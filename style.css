@@ -1,0 +1,399 @@
+/* ---------------------------
+    CORE SYSTEM VARIABLES
+--------------------------- */
+:root {
+  --bg-color: #050505;
+  --terminal-green: #00ff41;
+  --terminal-dim: #003b00;
+  --alert-red: #ff3333;
+  --warning-yellow: #ffcc00;
+  --neon-blue: #00f3ff;
+  
+  --font-main: "Share Tech Mono", monospace;
+  
+  --glow-text: 0 0 5px var(--terminal-green), 0 0 10px var(--terminal-green);
+  --glow-box: 0 0 10px rgba(0, 255, 65, 0.2), inset 0 0 20px rgba(0, 255, 65, 0.05);
+  
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.3s ease;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg-color);
+  color: var(--terminal-green);
+  font-family: var(--font-main);
+  overflow: hidden;
+  font-size: 16px;
+  user-select: none; /* ゲーム中の選択防止 */
+}
+
+/* ---------------------------
+    CRT SCANLINE EFFECT
+--------------------------- */
+.scanlines {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,0.2) 50%,
+    rgba(0,0,0,0.2)
+  );
+  background-size: 100% 4px;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.vignette {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
+  z-index: 998;
+  pointer-events: none;
+}
+
+/* Matrix Canvas */
+#matrixCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  opacity: 0.15;
+}
+
+/* ---------------------------
+    MAIN LAYOUT
+--------------------------- */
+.container {
+  position: relative;
+  z-index: 10;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* HUD (Heads Up Display) */
+header#hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 15px 25px;
+  background: rgba(0, 20, 0, 0.6);
+  border: 1px solid var(--terminal-dim);
+  border-bottom: 2px solid var(--terminal-green);
+  box-shadow: var(--glow-box);
+  margin-bottom: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.hud-group {
+  display: flex;
+  gap: 30px;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hud-label {
+  font-size: 0.8rem;
+  color: var(--terminal-green);
+  opacity: 0.7;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hud-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: var(--glow-text);
+  line-height: 1;
+}
+
+/* Trace Bar (Security Level) */
+.trace-container {
+  width: 200px;
+  text-align: right;
+}
+.trace-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: #111;
+  border: 1px solid #333;
+  margin-top: 5px;
+  position: relative;
+  overflow: hidden;
+}
+#traceBar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--terminal-green), var(--warning-yellow), var(--alert-red));
+  transition: width 0.1s linear, background-color 0.2s;
+  box-shadow: 0 0 10px var(--alert-red);
+}
+.trace-status {
+  font-size: 0.8rem;
+  color: var(--alert-red);
+  animation: blink 0.5s infinite;
+  display: none;
+  font-weight: bold;
+}
+.trace-status.active { display: inline; }
+
+/* ---------------------------
+    GAME PANEL
+--------------------------- */
+main#panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 10, 0, 0.7);
+  border: 1px solid var(--terminal-green);
+  box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+  position: relative;
+  padding: 40px;
+  transition: border-color 0.1s;
+}
+/* ダメージ時のフラッシュ */
+main#panel.flash-red {
+    border-color: var(--alert-red);
+    box-shadow: inset 0 0 50px rgba(255, 50, 50, 0.3);
+}
+
+/* Target Sentence (Japanese) */
+#sentenceJP {
+  font-size: 2.5rem;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255,255,255,0.8);
+  margin-bottom: 20px;
+  min-height: 1.2em;
+  border-bottom: 1px dashed rgba(0, 255, 65, 0.3);
+  padding-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Romaji Display Area */
+#sentenceROMA {
+  font-size: 2rem; /* サイズ調整 */
+  margin-bottom: 30px;
+  position: relative;
+  min-height: 40px;
+}
+
+#romajiContainer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1px;
+}
+
+/* 文字ごとのスタイル */
+.char {
+  padding: 2px 3px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  transition: color 0.05s;
+  font-family: 'Courier New', monospace; /* 等幅で見やすく */
+}
+
+/* 入力済み */
+.char.correct {
+  color: #444; 
+  text-shadow: none;
+}
+/* 現在のターゲット（ここが重要） */
+.char.current {
+  color: var(--neon-blue);
+  text-shadow: 0 0 10px var(--neon-blue);
+  border-bottom: 2px solid var(--neon-blue);
+  transform: scale(1.1);
+}
+/* 未入力 */
+.char.pending {
+  color: var(--terminal-green);
+  opacity: 0.8;
+}
+/* ミス（使用しないが念のため） */
+.char.error {
+  color: var(--alert-red) !important;
+}
+
+/* Progress Bar */
+.progress-wrap {
+  width: 100%;
+  height: 4px;
+  background: #002200;
+  margin-top: auto;
+  position: relative;
+}
+#progressBar {
+  height: 100%;
+  width: 0;
+  background: var(--neon-blue);
+  box-shadow: 0 0 10px var(--neon-blue);
+  transition: width 0.1s linear;
+}
+
+/* ---------------------------
+    CONTROLS & FOOTER
+--------------------------- */
+#controls {
+  margin-top: 30px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+button.btn {
+  background: transparent;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-family: var(--font-main);
+  font-size: 1.1rem;
+  padding: 10px 25px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+button.btn:hover {
+  background: var(--terminal-green);
+  color: #000;
+  box-shadow: 0 0 20px var(--terminal-green);
+}
+button.btn:active {
+  transform: scale(0.98);
+}
+button.btn.primary {
+  background: rgba(0, 255, 65, 0.1);
+  border-width: 2px;
+  font-weight: bold;
+}
+
+select {
+  background: #000;
+  color: var(--terminal-green);
+  border: 1px solid var(--terminal-green);
+  padding: 10px;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Details (Custom Input) */
+details {
+  margin-top: 20px;
+  border: 1px solid #333;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+}
+details summary {
+  cursor: pointer;
+  color: #666;
+  font-size: 0.9rem;
+  list-style: none;
+}
+details summary:hover { color: var(--terminal-green); }
+#customInput {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+#customInput input {
+  background: #111;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 8px;
+  font-family: var(--font-main);
+}
+
+/* ---------------------------
+    MODAL (RESULT)
+--------------------------- */
+#resultModal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: none; 
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+}
+#resultModal.active { display: flex; }
+
+.modal-content {
+  background: #001100;
+  border: 2px solid var(--terminal-green);
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 255, 65, 0.2);
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+}
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 3rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 20px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-size: 1.2rem;
+  border-bottom: 1px dotted #222;
+}
+
+/* Animations */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+/* パーティクル（追加） */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    background: var(--terminal-green);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    animation: pop 0.5s ease-out forwards;
+    z-index: 100;
+}
+@keyframes pop {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #hud { flex-direction: column; align-items: stretch; gap: 15px; }
+  .hud-group { justify-content: space-between; }
+  #sentenceJP { font-size: 1.5rem; }
+  #sentenceROMA { font-size: 1.2rem; }
+}
