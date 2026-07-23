@@ -6,6 +6,14 @@
     <title>HACKER TYPER: OMEGA - IT用語＆タイピングシミュレーター</title>
     <meta name="description" content="エンジニア・プログラマー向けのIT用語学習ツール。ハッキングシミュレーションを通じて、IT用語の解説文を楽しみながらタイピングできます。">
     
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9W9HG8SPJR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-9W9HG8SPJR');
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -55,10 +63,6 @@
         .modal-content { background: #000; border: 2px solid var(--neon-green); padding: 40px; text-align: center; width: 450px; max-width: 90%; color: var(--neon-green); font-family: var(--font-main); }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; }
         @keyframes blink { 50% { opacity: 0; } }
-        @keyframes milestoneFlash {
-            0%   { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
-        }
     </style>
 </head>
 <body>
@@ -95,7 +99,6 @@
             <div id="hud">
                 <div class="hud-item">TIME: <span id="timeDisplay">60.00</span></div>
                 <div class="hud-item">COMBO: <span id="comboDisplay">0</span></div>
-                <div class="hud-item">KPM: <span id="kpmDisplay">0</span></div>
                 <div class="hud-item">SCORE: <span id="scoreDisplay">$0</span></div>
                 <div class="hud-item high-score">HIGH SCORE: <span id="highScoreDisplay">$0</span></div>
             </div>
